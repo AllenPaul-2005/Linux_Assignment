@@ -1,0 +1,39 @@
+#!/bin/bash
+ 
+input_file="$1"
+output_file="output.txt"
+ 
+> "$output_file"
+ 
+frame_time=""
+wlan_type=""
+wlan_subtype=""
+ 
+while IFS= read -r line; do
+  if [[ "$line" == frame.time* ]]; then
+    frame_time=$(echo "$line" | cut -d':' -f2- | sed 's/^ *//')
+  fi
+ 
+  if [[ "$line" == wlan.fc.type* ]]; then
+    wlan_type=$(echo "$line" | cut -d':' -f2- | sed 's/^ *//')
+  fi
+ 
+  if [[ "$line" == wlan.fc.subtype* ]]; then
+    wlan_subtype=$(echo "$line" | cut -d':' -f2- | sed 's/^ *//')
+  fi
+ 
+  if [[ -n "$frame_time" && -n "$wlan_type" && -n "$wlan_subtype" ]]; then
+    {
+      echo "\"frame.time\": \"$frame_time\""
+      echo "\"wlan.fc.type\": \"$wlan_type\""
+      echo "\"wlan.fc.subtype\": \"$wlan_subtype\""
+      echo
+    } >> "$output_file"
+ 
+    frame_time=""
+    wlan_type=""
+    wlan_subtype=""
+  fi
+done < "$input_file"
+ 
+ 
